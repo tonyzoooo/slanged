@@ -1,5 +1,6 @@
 import json
 import requests 
+import turtle
 from random import randint
 
 
@@ -38,6 +39,14 @@ def hangman(word = "hello"):
 
 
 # =============================================================================
+# Drawing during Hangman
+# =============================================================================
+def drawHead():
+    turtle.circle(10)
+    turtle.hideturtle()
+    turtle.circle(10)
+
+# =============================================================================
 # UrbanDictionary API
 # =============================================================================
 
@@ -54,3 +63,5 @@ def findRandomWord():
     size = len(data)
     print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
     return data[randint(0, size - 1 )]
+
+drawHead()
