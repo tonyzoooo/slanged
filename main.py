@@ -1,7 +1,7 @@
-import json
 import requests 
 import turtle
 from random import randint
+import re
 
 
 # =============================================================================
@@ -61,7 +61,38 @@ def findRandomWord():
     content=requests.get(url)
     data=content.json()["list"]
     size = len(data)
-    print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
-    return data[randint(0, size - 1 )]
+    word = data[randint(0, size - 1 )]
+    name = word["word"]
+    while (re.search("\W", name) or len(name)<=3):
+        word = data[randint(0, size - 1 )]
+        name = word["word"]
+    #print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
+    return word
 
-drawHead()
+
+
+# =============================================================================
+# Crosswords
+# =============================================================================
+
+def createWordsList():
+    words= list()
+    words_veri = list()
+    while len(words_veri)!= 30:
+        word = findRandomWord()
+        words.append(word)
+        name = word["word"]
+        if (name not in words_veri):
+            words.append(word)
+            words_veri.append(name)
+    return sorted(words_veri, key=len), words
+
+
+# =============================================================================
+# Guess the word?
+# =============================================================================
+
+#def guessTheWord(word):
+#    print("Try to guess what the word is!")
+#    print("Here's the definition:")
+#    if word["word"].lower()==
