@@ -54,7 +54,10 @@ def findWordDefinition(word="lurker"):
     url = "https://api.urbandictionary.com/v0/define?term="+word
     content=requests.get(url)
     data=content.json()
+    #classer par score
     return data["list"][0]["definition"]
+
+
 
 def findRandomWord():
     url = "https://api.urbandictionary.com/v0/random"
@@ -63,7 +66,7 @@ def findRandomWord():
     size = len(data)
     word = data[randint(0, size - 1 )]
     name = word["word"]
-    while (re.search("\W", name) or len(name)<=3):
+    while (re.search("\W", name) or 15 < len(name)<=3) :
         word = data[randint(0, size - 1 )]
         name = word["word"]
     #print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
@@ -78,21 +81,55 @@ def findRandomWord():
 def createWordsList():
     words= list()
     words_veri = list()
-    while len(words_veri)!= 30:
+    while len(words_veri)!= 15:
         word = findRandomWord()
         words.append(word)
         name = word["word"]
         if (name not in words_veri):
             words.append(word)
             words_veri.append(name)
-    return sorted(words_veri, key=len), words
+    return sorted(words_veri, key=len).reverse(), words
 
+
+def createGrid():
+    return list(15* [15*['_']])
+
+def compatible(char, word):
+    return (char in word)
+
+def compatibleLen(index, mot):
+    return (0 <= index <15 and len(mot)<index+1)
+
+def isAvailable(cell):
+    return cell=='_'
+
+
+def putWords(grid, words):
+    for word in words:
+        index1 = randint(0, 15)
+        index2 = randint(0, 15)
+        
+        
+    
 
 # =============================================================================
 # Guess the word?
 # =============================================================================
 
-#def guessTheWord(word):
-#    print("Try to guess what the word is!")
-#    print("Here's the definition:")
-#    if word["word"].lower()==
+def guessTheWord(word):
+    print("Try to guess what the word is!")
+    print("Here's the definition:")
+    print(word["definition"])
+    myword = ""
+    tries = 3
+    while (word["word"].lower()!=myword.lower() and tries !=0 ):
+        myword= input("Type in a word:")
+        tries-=1
+        print("Tries left:" + str(tries))
+    if (tries !=0):
+        print("Good job! You found it!")
+    else:
+        print("Boo! You s*ck!")
+        print("The word was: " + word["word"] + ".")
+
+guessTheWord(findRandomWord())
