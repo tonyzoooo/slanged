@@ -42,10 +42,85 @@ def hangman(word = "hello"):
 # Drawing during Hangman
 # =============================================================================
 def drawHead():
-    turtle.circle(10)
+    turtle.seth(90)
+    turtle.goto(0,100)
+    turtle.down()
+    turtle.right(90)
+    turtle.circle(20)
+    turtle.up()
+    
+def drawTronc():
+    turtle.pensize(10)
+    turtle.seth(90)
     turtle.hideturtle()
+    turtle.down()
+    turtle.forward(100)
+    turtle.up()
+    
+def drawLeftLeg():
+    turtle.goto(0,0)
+    turtle.seth(-115)
+    turtle.down()
+    turtle.forward(50)
+    turtle.up()
+    
+def drawRightLeg():
+    turtle.goto(0,0)
+    turtle.seth(-65)
+    turtle.down()
+    turtle.forward(50)
+    turtle.up()
+    
+def drawLeftArm():
+    turtle.goto(0,100)
+    turtle.seth(-115)
+    turtle.down()
+    turtle.forward(50)
+    turtle.up()
+    
+def drawRightArm():
+    turtle.goto(0,100)
+    turtle.seth(-65)
+    turtle.down()
+    turtle.forward(50)
+    turtle.up()
+    
+def œœœ():
+    turtle.goto(0,140)
+    turtle.seth(90)
+    turtle.down()
+    turtle.forward(40)
+    turtle.up()
+    
+def bite():
+    turtle.goto(0,0)
+    turtle.pensize(5)
+    turtle.color("red")
+    turtle.seth(-90)
+    turtle.down()
     turtle.circle(10)
-
+    turtle.left(180)
+    turtle.circle(10)
+    turtle.pensize(10)
+    turtle.forward(20)
+    turtle.up()
+    
+a = input()
+drawTronc()
+a = input()
+drawLeftLeg()
+a = input()
+drawRightLeg()
+a = input()
+drawLeftArm()
+a = input()
+drawRightArm()
+a = input()
+drawHead()
+a = input()
+œœœ()
+a = input()
+bite()
 # =============================================================================
 # UrbanDictionary API
 # =============================================================================
