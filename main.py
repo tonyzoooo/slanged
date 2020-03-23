@@ -14,7 +14,8 @@ def verify(letter, letters):
 def hasBlank(hidden_word):
     return '_' in hidden_word
 
-def update(letter, letters, word, hidden_word):
+def update(letter, letters, word, hidden_word, used_letters):
+    used_letters.add(letter)
     if verify(letter, letters):
         for k in range(len(word)):
             if word[k] == letter:
@@ -25,6 +26,7 @@ def hangman(word = "hello"):
     letters = set()
     hidden_word = list()
     counter = 0
+    used_letters = set()
 
     for letter in word:
         letters.add(letter)
@@ -35,12 +37,21 @@ def hangman(word = "hello"):
         print(hidden_word)
         letter = input("Type in a letter:")
         counter += 1
-        update(letter, letters, word, hidden_word)
+        print("Tries: " + str(counter))
+        update(letter, letters, word, hidden_word, used_letters)
+        print("Guesses: " + str(used_letters))
+    
+    if hasBlank(hidden_word):
+        print("Too bad, you lost! The word was " + word)
+    else:
+        print("Great job! You got it!")
+        
 
 
 # =============================================================================
 # Drawing during Hangman
 # =============================================================================
+
 def drawHead():
     turtle.seth(90)
     turtle.goto(0,100)
@@ -50,9 +61,6 @@ def drawHead():
     turtle.up()
     
 def drawTronc():
-    turtle.pensize(10)
-    turtle.seth(90)
-    turtle.hideturtle()
     turtle.down()
     turtle.forward(100)
     turtle.up()
@@ -121,6 +129,26 @@ a = input()
 œœœ()
 a = input()
 bite()
+turtle.circle(10)
+
+
+def drawBase():
+    turtle.right(90)
+    turtle.forward(100)
+    turtle.backward(5)
+    turtle.left(90)
+
+def drawVertical():
+    turtle.forward(30)
+    turtle.backward(5)
+
+
+def drawHangMan():
+    drawBase()
+    drawVertical()
+    turtle.done()
+
+
 # =============================================================================
 # UrbanDictionary API
 # =============================================================================
@@ -207,4 +235,23 @@ def guessTheWord(word):
         print("Boo! You s*ck!")
         print("The word was: " + word["word"] + ".")
 
-guessTheWord(findRandomWord())
+
+# =============================================================================
+# Crosswords
+# =============================================================================
+
+def sortedStack(words):
+    sorted_words = words.sort(key = len)
+    return sorted_words.reverse()
+
+def genererateCrosswords(words):
+    stack = sortedStack(words)
+	
+def buildGrid(stack):
+    size = len(stack)
+    grid = []
+
+    while (len(stack) != 0):
+        stack.pop() 
+    return grid
+
