@@ -3,7 +3,6 @@ import turtle
 from random import randint
 import re
 
-
 # =============================================================================
 # Hangman
 # =============================================================================
@@ -113,7 +112,7 @@ def bite():
     turtle.forward(20)
     turtle.up()
     
-a = input()
+"""a = input()
 drawTronc()
 a = input()
 drawLeftLeg()
@@ -129,7 +128,7 @@ a = input()
 œœœ()
 a = input()
 bite()
-turtle.circle(10)
+turtle.circle(10)"""
 
 
 def drawBase():
@@ -191,28 +190,17 @@ def createWordsList():
         if (name not in words_veri):
             words.append(word)
             words_veri.append(name)
-    return sorted(words_veri, key=len).reverse(), words
-
+    return sorted(words_veri, key=len).reverse(), sorted(words, key=len)
 
 def createGrid():
     return list(15* [15*['_']])
 
-def compatible(char, word):
+def compatibleWord(char, word):
     return (char in word)
 
-def compatibleLen(index, mot):
-    return (0 <= index <15 and len(mot)<index+1)
+def firstWord(index, word):
+    return 15 - index < len(word) 
 
-def isAvailable(cell):
-    return cell=='_'
-
-
-def putWords(grid, words):
-    for word in words:
-        index1 = randint(0, 15)
-        index2 = randint(0, 15)
-        
-        
     
 
 # =============================================================================
@@ -234,24 +222,4 @@ def guessTheWord(word):
     else:
         print("Boo! You s*ck!")
         print("The word was: " + word["word"] + ".")
-
-
-# =============================================================================
-# Crosswords
-# =============================================================================
-
-def sortedStack(words):
-    sorted_words = words.sort(key = len)
-    return sorted_words.reverse()
-
-def genererateCrosswords(words):
-    stack = sortedStack(words)
-	
-def buildGrid(stack):
-    size = len(stack)
-    grid = []
-
-    while (len(stack) != 0):
-        stack.pop() 
-    return grid
 
