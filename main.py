@@ -2,50 +2,54 @@ import requests
 import turtle
 from random import randint
 import re
+from games import Hangman
+from ui import App
 
 # =============================================================================
-# Hangman
+# UrbanDictionary API
 # =============================================================================
 
-def verify(letter, letters):
-    return letter in letters
+def findWordDefinition(word="lurker"):
+    url = "https://api.urbandictionary.com/v0/define?term="+word
+    content=requests.get(url)
+    data=content.json()
+    #classer par score
+    return data["list"][0]["definition"]
 
-def hasBlank(hidden_word):
-    return '_' in hidden_word
 
-def update(letter, letters, word, hidden_word, used_letters):
-    used_letters.add(letter)
-    if verify(letter, letters):
-        for k in range(len(word)):
-            if word[k] == letter:
-                hidden_word[k] = letter
 
-def hangman(word = "hello"):
-    nb_letters = 0
-    letters = set()
-    hidden_word = list()
-    counter = 0
-    used_letters = set()
+def findRandomWord():
+    url = "https://api.urbandictionary.com/v0/random"
+    content=requests.get(url)
+    data=content.json()["list"]
+    size = len(data)
+    word = data[randint(0, size - 1 )]
+    name = word["word"]
+    while (re.search("\W", name) or 15 < len(name)<=3) :
+        word = data[randint(0, size - 1 )]
+        name = word["word"]
+    #print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
+    return word
 
-    for letter in word:
-        letters.add(letter)
-        nb_letters += 1
-        hidden_word.append('_')
-    
-    while counter <= nb_letters and hasBlank(hidden_word):
-        print(hidden_word)
-        letter = input("Type in a letter:")
-        counter += 1
-        print("Tries: " + str(counter))
-        update(letter, letters, word, hidden_word, used_letters)
-        print("Guesses: " + str(used_letters))
-    
-    if hasBlank(hidden_word):
-        print("Too bad, you lost! The word was " + word)
-    else:
-        print("Great job! You got it!")
-        
 
+
+
+
+# =============================================================================
+# Main program
+# =============================================================================
+def main():
+    word = findRandomWord()['word']
+    hangman = Hangman(word)
+    hangman.initGame()
+    print(hangman.word)
+    print(findWordDefinition(word=word))
+
+if __name__ == '__main__':
+    main()
+
+
+"""
 
 # =============================================================================
 # Drawing during Hangman
@@ -111,24 +115,7 @@ def bite():
     turtle.pensize(10)
     turtle.forward(20)
     turtle.up()
-    
-"""a = input()
-drawTronc()
-a = input()
-drawLeftLeg()
-a = input()
-drawRightLeg()
-a = input()
-drawLeftArm()
-a = input()
-drawRightArm()
-a = input()
-drawHead()
-a = input()
-œœœ()
-a = input()
-bite()
-turtle.circle(10)"""
+
 
 
 def drawBase():
@@ -148,31 +135,7 @@ def drawHangMan():
     turtle.done()
 
 
-# =============================================================================
-# UrbanDictionary API
-# =============================================================================
 
-def findWordDefinition(word="lurker"):
-    url = "https://api.urbandictionary.com/v0/define?term="+word
-    content=requests.get(url)
-    data=content.json()
-    #classer par score
-    return data["list"][0]["definition"]
-
-
-
-def findRandomWord():
-    url = "https://api.urbandictionary.com/v0/random"
-    content=requests.get(url)
-    data=content.json()["list"]
-    size = len(data)
-    word = data[randint(0, size - 1 )]
-    name = word["word"]
-    while (re.search("\W", name) or 15 < len(name)<=3) :
-        word = data[randint(0, size - 1 )]
-        name = word["word"]
-    #print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
-    return word
 
 
 
@@ -223,3 +186,10 @@ def guessTheWord(word):
         print("Boo! You s*ck!")
         print("The word was: " + word["word"] + ".")
 
+
+some useful links ??
+https://stackoverflow.com/questions/55444898/can-i-stack-a-frame-on-top-of-a-canvas-tkinter
+https://github.com/riverrun/genxword/blob/master/genxword/calculate.py
+https://github.com/jameslinjl/Hangman/blob/master/hangmantext.py
+
+"""
