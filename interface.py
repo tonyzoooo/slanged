@@ -95,9 +95,11 @@ class App:
     fenetre.mainloop()
     
   def HangMan(self):
+    del_frame_content(self.game)
     Hangman(self.game,self.fenetre)
   
   def Guess_TheWord(self):
+    del_frame_content(self.game)
     GuessTheWorld(self.game)
     
 class Hangman:
