@@ -9,6 +9,10 @@ import tkinter as tk
 import math
 import time
 
+
+def void(event):
+  pass
+
 class turtle_du_pauvre(tk.Canvas):
   def __init__(self, master, **args):
     super(turtle_du_pauvre,self).__init__(master, **args)
@@ -106,8 +110,6 @@ class Hangman:
   def __init__(self,master,root):
     self.fenetre = master
     fenetre = self.fenetre
-    fenetre.focus_set()
-    fenetre.bind("<Key>", self.keyEvent)
     fenetre.config(bg = 'green')
     
     frame_pendu = tk.Frame(fenetre)
@@ -138,42 +140,68 @@ class Hangman:
     try_word.bind("<Return>", self.try_word_controlleur)
     
     frame_buttons = tk.Frame(fenetre)
-    for i in range(5):
+    
+    frame_buttons.grid(row = 3)
+    
+    for i in range(6):
       for j in range(4):
         letter = chr(65+4*i+j)
-        im = tk.PhotoImage(file = "./alphabet/"+letter+".png")
+        im = tk.PhotoImage(file = "alphabet/"+letter+".png")
         im = im.subsample(10,10)
-        button = tk.Button(frame_buttons, image=im, command = lambda x=letter: self.addLetter(x))
+        button = tk.Button(frame_buttons)
+        button.text = letter
+        button.im = im
+        button.configure(image = button.im)
+        button.configure(command = lambda x=letter: self.addLetter(x))
         button.grid(row = i, column= j)
     
-    letter = chr(65+4*5)
-    im = tk.PhotoImage(file = "./alphabet/"+letter+".png")
+    letter = chr(65+4*6)
+    im = tk.PhotoImage(file = "alphabet/"+letter+".png")
     im = im.subsample(10,10)
-    button = tk.Button(frame_buttons, image=im, command = lambda x=letter: self.addLetter(x))
-    button.grid(row = 5, column= 1)
+    button = tk.Button(frame_buttons)
+    button.text = letter
+    button.im = im
+    button.configure(image = button.im)
+    button.configure(command = lambda x=letter: self.addLetter(x))
+    button.grid(row = 6, column= 1)
     frame_buttons.grid()
     
-    letter = chr(65+4*5+1)
-    im = tk.PhotoImage(file = "./alphabet/"+letter+".png")
+    letter = chr(65+4*6+1)
+    im = tk.PhotoImage(file = "alphabet/"+letter+".png")
     im = im.subsample(10,10)
-    button = tk.Button(frame_buttons, image=im, command = lambda x=letter: self.addLetter(x))
-    button.grid(row = 5, column= 2)
+    button = tk.Button(frame_buttons)
+    button.text = letter
+    button.im = im
+    button.configure(image = button.im)
+    button.configure(command = lambda x=letter: self.addLetter(x))
+    button.grid(row = 6, column= 2)
     
-    frame_buttons.grid()
+    self.get_key = tk.IntVar()
+    get_key = tk.Checkbutton(fenetre, text="Use the keyboard", command = self.check, variable=self.get_key)
+    get_key.grid(row=4)
     
   def try_word_controlleur(self, event):
     word = self.try_word.get()
     pass
 
-  def keyEvent(self,event):
-    letter = event.keysis()
-    self.addLetter(letter)
+  def check(self):
+    if(self.get_key.get()==1):
+      self.fenetre.bind("<Key>", self.keyEvent)
+      self.fenetre.focus_set()
+    else :
+      self.fenetre.bind("<Key>", void)
 
-  def addLetter(letter):
+  def keyEvent(self,event):
+    if(self.get_key.get()==1):
+      letter = event.keysym
+      self.addLetter(letter)
+      
+
+  def addLetter(self,letter):
     print(letter)
-    pass
+    
   
-  
+
 
 
 
