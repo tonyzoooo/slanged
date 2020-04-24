@@ -44,6 +44,7 @@ class turtle_du_pauvre(tk.Canvas):
     self.angle = 0
     self.pos = (250,250)
     self.unit = 1
+    self.speed = 4
     
   def reset(self):
     self.delete("all")
@@ -70,7 +71,7 @@ class turtle_du_pauvre(tk.Canvas):
     for k in range(round(d/self.unit)) :
       self.create_line(x,y,round(x+k*x_unit),round(y+k*y_unit))
       self.update()
-      time.sleep(0.01)
+      time.sleep(0.01/self.speed)
     (x1,y1) = self.pos
     self.pos = (x+d*x_unit,y+d*y_unit)
     
@@ -82,7 +83,7 @@ class turtle_du_pauvre(tk.Canvas):
     for k in range(round(d/math.sqrt(2*(self.unit**2)))) :
       self.create_line(x,y,round(x+k*x_unit),round(y+k*y_unit))
       self.update()
-      time.sleep(0.01)
+      time.sleep(0.01/self.speed)
     (x1,y1) = self.pos
     self.pos = (x+d*x_unit,y+d*y_unit)
     
@@ -101,7 +102,7 @@ class turtle_du_pauvre(tk.Canvas):
       x,y= new_x,new_y
       new_angle = new_angle + angle_unit
       self.update()
-      time.sleep(0.01)
+      time.sleep(0.01/self.speed)
       
   def move(self,x,y):
     (bx,by) = self.pos
