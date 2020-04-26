@@ -11,11 +11,8 @@ import tkinter as tk
 import requests
 import re
 from random import randint
-import time
-import math
 import textwrap
-#from tkinter import font  as tkfont 
-#from itertools import count
+from tkinter import font as tkfont 
 
 
 # =============================================================================
@@ -38,12 +35,26 @@ def findRandomWord():
     size = len(data)
     word = data[randint(0, size - 1 )]
     name = word["word"]
-    while (re.search("\W[0-9]\s", name) or 15 < len(name)<=3) :
+    while not(re.search("^[A-Za-z]*$", name) or 15 < len(name)<=3) or name in word['definition']:
         word = data[randint(0, size - 1 )]
         name = word["word"]
     #print(json.dumps(data[randint(0,size - 1)], sort_keys=True, indent=4))
-    return word
+    Dict = {'word' : name, 'definition' : findWordDefinition(name) }
+    return Dict
+
+def storeWord(word):
+    Dict = {'word' : word, 'definition' : findWordDefinition(word) }
+    with open("vocabulary.txt", "a+") as file:
+        for key, value in Dict.items():
+            file.write('%s:%s\n' % (key, value))
+        file.write("\n\n")
+
    
+def storeCompleteWord(word):
+    with open("vocabulary.txt", "a+") as file:
+        for key, value in word.items():
+            file.write('%s:%s\n' % (key, value))
+        file.write("\n\n")
 
 # =============================================================================
 # Main classes (MVC pattern)
@@ -59,7 +70,6 @@ class App(tk.Frame):
         controller2 = GuessWordViewController()
         self.menubar = tk.Menu(master)
         controller3 = MatchWordViewController()
-        #controller4 = CrosswordViewController()
         self.pages = [MainView(), controller1.view, controller2.view, controller3.view]
         for page in self.pages:
             page.place(in_=self, x=0, y=0, relwidth=1, relheight=1)
@@ -83,8 +93,12 @@ class View(tk.Frame):
     def __init__(self, name, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
         self.name = name
+        top = tk.Frame(self, bg ='white')
         self.container = tk.Frame(self, borderwidth=2, relief=tk.GROOVE, bg ='white')
+        top.pack()
         self.container.place(relx=0.5, rely=0.5, anchor='center')
+        self.title = tk.Label(top, text= self.name, font=('Helvetica bold', 18))
+        self.title.pack()
     def show(self):
         self.lift()
         self.focus_set()
@@ -135,7 +149,16 @@ class MainView(View):
     def __init__(self, *args, **kwargs):
         super().__init__(self, bg ='white')
         self.name = "Homepage"
-        self.container.place(relx=0.5, rely=0.5, anchor='center')
+        self.title.config(text = self.name)
+        self.gamename = tk.Label(self.container, text="Slanged!", bg = 'white',  
+                                  font = ('Helvetica', 30))
+        self.description = tk.Label(self.container, 
+                                    text = "An interactive way of learning English colloquialism", 
+                                    bg = 'white')
+        self.authors = tk.Label(self.container, text = "Made by L. Mazou and T. Zhou", bg = 'white')
+        self.gamename.pack()
+        self.description.pack()
+        self.authors.pack()
 
       
        
@@ -150,25 +173,27 @@ class HangmanView(View):
         self.score = tk.StringVar()
         self.letters = tk.StringVar()
         self.lives = tk.StringVar()
-        image = tk.Frame(self.container)
+        image = tk.Frame(self.container, width = 500, height = 500)
         self.image = self.genPicture(image)
-        dialogbox = tk.Frame(self.container)
+        dialogbox = tk.Frame(self.container, bg = 'white')
         self.dialog = self.genDialog(dialogbox)
-        playground = tk.Frame(self.container)
-        keyboard = tk.Frame(self.container)
-        scoreboard = tk.Frame(self.container)
+        playground = tk.Frame(self.container, bg = 'white')
+        keyboard = tk.Frame(self.container, bg = 'white')
+        scoreboard = tk.Frame(self.container, bg = 'white', relief=tk.GROOVE, borderwidth=2)
         self.buttons = self.genKeyboard(keyboard)
         self.genScoreboard(scoreboard)
         self.word = self.genPlayground(playground)
         self.entry = self.genEntry(playground)
-        image.grid(row= 0, column=0)
-        playground.grid(row = 1, column = 0)
-        scoreboard.grid(row = 1, column = 1)
-        keyboard.grid(row = 0,  column = 1)
-        dialogbox.grid(row = 2, column=0, columnspan=2)
+        self.title.config(text=self.name)
+
+        image.grid(row= 1, column=0)
+        playground.grid(row = 2, column = 0)
+        scoreboard.grid(row = 2, column = 1)
+        keyboard.grid(row = 1,  column = 1)
+        dialogbox.grid(row = 3, column=0, columnspan=2)
         
     def genDialog(self, master):
-        label = tk.Label(master, text="Good luck!")
+        label = tk.Label(master, text="Good luck!", bg = 'white', font=('Helvetica', 11))
         label.pack()
         return label
 
@@ -187,11 +212,11 @@ class HangmanView(View):
     
     def genScoreboard(self, master):
         labels = []
-        score_lbl = tk.Label(master, textvariable= self.score)
+        score_lbl = tk.Label(master, textvariable= self.score, bg = 'white', font=('Helvetica', 11))
         labels.append(score_lbl)
-        tries_lbl = tk.Label(master, textvariable = self.letters)
+        tries_lbl = tk.Label(master, textvariable = self.letters, bg = 'white', font=('Helvetica', 11))
         labels.append(tries_lbl)
-        lives_lbl = tk.Label(master, textvariable =self.lives)
+        lives_lbl = tk.Label(master, textvariable =self.lives, bg = 'white', font=('Helvetica', 11))
         labels.append(lives_lbl)
         score_lbl.pack(side = 'top')
         tries_lbl.pack(side = 'top')
@@ -207,7 +232,7 @@ class HangmanView(View):
             letter = chr(65+4*i+j)
             im = tk.PhotoImage(file = "alphabet/"+letter+".png")
             im = im.subsample(10,10)
-            button = tk.Button(master)
+            button = tk.Button(master, bg = 'white')
             button.text = letter
             button.im = im
             button.configure(image = button.im)
@@ -217,7 +242,7 @@ class HangmanView(View):
         letter = chr(65+4*6)
         im = tk.PhotoImage(file = "alphabet/"+letter+".png")
         im = im.subsample(10,10)
-        button = tk.Button(master)
+        button = tk.Button(master, bg = 'white')
         button.text = letter
         button.im = im
         button.configure(image = button.im)
@@ -228,7 +253,7 @@ class HangmanView(View):
         letter = chr(65+4*6+1)
         im = tk.PhotoImage(file = "alphabet/"+letter+".png")
         im = im.subsample(10,10)
-        button = tk.Button(master)
+        button = tk.Button(master, bg = 'white')
         button.text = letter
         button.im = im
         button.configure(image = button.im)
@@ -237,9 +262,9 @@ class HangmanView(View):
         return buttons
     
     def genPlayground(self, master):
-        greet_lbl = tk.Label(master, text='Try to find the word!')
+        greet_lbl = tk.Label(master, text='Try to find the word!', bg = 'white', font=('Helvetica', 14))
         greet_lbl.pack()
-        word_lbl = tk.Label(master)
+        word_lbl = tk.Label(master, font=('Helvetica', 11))
         word_lbl.pack()
         return word_lbl
     
@@ -280,6 +305,10 @@ class HangmanViewController:
         for i in range(len(self.view.buttons)) :
             letter = chr(65 + i)
             self.view.buttons[i]['command']= lambda x = letter: self.addLetter(x)
+            
+    def unbindButtons(self):
+        for button in self.view.buttons :
+            button['command']= lambda : self.reset()
         
     def initGame(self):
         hw = tk.StringVar(value = ' '.join(self.game.hword))
@@ -306,11 +335,17 @@ class HangmanViewController:
         
             
     def reset(self):
+        self.view.entry.delete(0, 'end')
+        self.resetButtons()
+        self.bindButtons()
         self.game.guess = False
         self.game.word = findRandomWord()['word']
         self.game.lives.set(8)
         self.game.hword=list(len(self.game.word)*'_')
+        hw = tk.StringVar(value = ' '.join(self.game.hword))
+        self.view.word['textvariable'] = hw
         self.game.letters = []
+        hw = tk.StringVar()
         im = tk.PhotoImage(file = "states/0.png")
         self.im = im
         self.view.image.configure(image = self.im)
@@ -320,7 +355,11 @@ class HangmanViewController:
         self.bindButtons()
         self.view.unbind("r")
         
-
+    def resetButtons(self):
+        for button in self.view.buttons:
+            for attempt in self.game.letters:
+                if attempt==button.text:
+                    button.configure(relief = tk.RAISED, bg='white')
 
     def addLetter(self, letter):
         hw = tk.StringVar()
@@ -332,6 +371,9 @@ class HangmanViewController:
                     self.game.hword[i] = letter
             self.game.won = not '_' in self.game.hword
             self.game.updateScore()
+        for button in self.view.buttons:
+            if button.text == letter:
+                button.configure(relief = tk.SUNKEN, bg='black')
         hw.set(' '.join(self.game.hword))
         im = tk.PhotoImage(file = "states/"+str(8-self.game.lives.get())+".png")
         self.im = im
@@ -346,6 +388,7 @@ class HangmanViewController:
         elif self.game.lives.get()==0:
             self.view.dialog.config(text="Too bad, you lost!\nPress 'R' to play again!"+
                                     "\nThe word was actually: "+self.game.word)
+            self.unbindButtons()
             self.view.bind("r", lambda e:self.reset())
             
 
@@ -363,32 +406,33 @@ class GuessWordView(View):
         self.score = tk.StringVar()
         self.attempts = tk.StringVar()
         self.lives = tk.StringVar()
-        playground = tk.Frame(self.container)
-        scoreboard = tk.Frame(self.container)
-        workzone = tk.Frame(self.container)
-        dialogbox = tk.Frame(self.container)
+        playground = tk.Frame(self.container, bg = 'white')
+        scoreboard = tk.Frame(self.container, bg = 'white', relief = tk.GROOVE, borderwidth=2)
+        workzone = tk.Frame(self.container, bg = 'white')
+        dialogbox = tk.Frame(self.container, bg = 'white')
         self.dialog = self.genDialog(dialogbox)
         self.genScoreboard(scoreboard)
         self.definition = self.genPlayground(playground)
         self.word = self.genEntry(workzone)
-        playground.grid(row = 0, column = 0)
-        scoreboard.grid(row = 0, column = 1)
-        workzone.grid(row = 1, column = 1)
-        dialogbox.grid(row = 2, column=0, columnspan =2)
+        self.title.config(text = self.name)
+        playground.grid(row = 1, column = 0, columnspan=2)
+        scoreboard.grid(row = 1, column = 2)
+        workzone.grid(row = 2, column = 0, columnspan =2)
+        dialogbox.grid(row = 3, column=0, columnspan =2)
         
         
     def genDialog(self, master):
-        label = tk.Label(master, text="Good luck!")
+        label = tk.Label(master, text="Good luck!", bg = 'white', font=('Helvetica', 11))
         label.pack()
         return label
         
     def genScoreboard(self, master):
         labels = []
-        score_lbl = tk.Label(master, textvariable= self.score)
+        score_lbl = tk.Label(master, textvariable= self.score, bg = 'white', font=('Helvetica', 11))
         labels.append(score_lbl)
-        tries_lbl = tk.Label(master, textvariable = self.attempts)
+        tries_lbl = tk.Label(master, textvariable = self.attempts, bg = 'white', font=('Helvetica', 11))
         labels.append(tries_lbl)
-        lives_lbl = tk.Label(master, textvariable =self.lives)
+        lives_lbl = tk.Label(master, textvariable =self.lives, bg = 'white', font=('Helvetica', 11))
         labels.append(lives_lbl)
         score_lbl.pack(side = 'top')
         tries_lbl.pack(side = 'top')
@@ -396,9 +440,9 @@ class GuessWordView(View):
         return labels
     
     def genPlayground(self, master):
-        greet_lbl = tk.Label(master, text='Try to guess the word!')
+        greet_lbl = tk.Label(master, text='Try to find the word!', bg = 'white', font=('Helvetica', 14))
         greet_lbl.pack()
-        def_lbl = tk.Label(master)
+        def_lbl = tk.Label(master, bg = 'white', font=('Helvetica', 11))
         def_lbl.pack()
         return def_lbl
 
@@ -438,7 +482,7 @@ class GuessWordViewController:
             self.game.guess = False
         else:
             self.game.lives.set(lives-1)
-            self.view.dialog.config(text="Wrong!")
+            self.view.dialog.config(text="Wrong!", bg ='red')
     
     def initGame(self):
         my_wrap = textwrap.TextWrapper(width=70)
@@ -447,29 +491,32 @@ class GuessWordViewController:
         self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.view.attempts.set("Input words:\n"+ str(self.game.attempts))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
-        self.view.definition.config(textvariable=definition, width=70)
+        self.view.definition.config(textvariable=definition, width=70, justify=tk.LEFT)
         
     def submit(self):
         word = self.view.word.get()
         if word.lower() == self.game.word['word'].lower():
-            self.view.dialog.config(text="GGWP!\n Press 'R' to play again!")
+            self.view.dialog.config(text="GGWP!\n Press 'R' to play again!", bg ='green')
             self.game.won = True
             self.view.bind("r", lambda e : self.reset())
             self.view.word.unbind("<Return>")
             self.view.focus_set()
         else:
             self.game.attempts.append(word)
+            self.view.word.delete(0, 'end')
         self.updateScore()
         self.view.attempts.set("Input words:\n"+ str(self.game.attempts))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
         if self.game.lives.get()==0:
             self.view.dialog.config(text="Better luck next time!\nPress 'R' to play again!\n"+
-                                    "The word was "+self.game.word['word'])
+                                    "The word was "+self.game.word['word'], bg = 'white')
             self.view.bind("r", lambda e : self.reset())
             self.view.word.unbind("<Return>")
             self.view.focus_set()
         
     def reset(self):
+        storeCompleteWord(self.game.word)
+        self.view.word.delete(0, 'end')
         self.game.guess = False
         self.game.word = findRandomWord()
         self.game.lives.set(5)
@@ -480,8 +527,8 @@ class GuessWordViewController:
         self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.view.attempts.set("Input words:\n"+ str(self.game.attempts))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
-        self.view.definition.config(textvariable=definition, width=70)
-        self.view.dialog.config(text="Good luck!")
+        self.view.definition.config(textvariable=definition, width=70, justify=tk.LEFT)
+        self.view.dialog.config(text="Good luck!", bg ='white')
         self.view.unbind("r")
         self.view.word.bind("<Return>", lambda e:self.submit())
         
@@ -496,29 +543,38 @@ class MatchWordView(View):
         self.name = "MatchWord"
         self.score = tk.StringVar()
         self.buttonvar = tk.IntVar()
-        buttonframe = tk.Frame(self.container)
-        playground=tk.Frame(self.container)
+        buttonframe = tk.Frame(self.container, bg = 'white')
+        playground=tk.Frame(self.container, bg = 'white')
+        dialogbox = tk.Frame(self.container, bg = 'white')
+        self.dialog = self.genDialog(dialogbox)
         self.definition = self.genPlayground(playground)
         self.buttons =[tk.Radiobutton(buttonframe), tk.Radiobutton(buttonframe),tk.Radiobutton(buttonframe)]
         self.submit = tk.Button(playground, text="Submit")
         self.submit.pack()
         for button in self.buttons:
             button.pack(side="left")
-        buttonframe.pack()
-        playground.pack()
-        scoreboard = tk.Frame(self.container)
+        self.title.config(text = self.name)
+        playground.grid(row = 1, column = 0, columnspan=2)
+        buttonframe.grid(row = 2, column = 0, columnspan=2)
+        scoreboard = tk.Frame(self.container, bg = 'white', relief=tk.GROOVE, borderwidth=2)
         self.genScoreboard(scoreboard)
-        scoreboard.pack()
+        scoreboard.grid(row = 1, column = 2)
+        dialogbox.grid(row = 3, column = 0 , columnspan=2)
+        
+    def genDialog(self, master):
+        label = tk.Label(master, bg = 'white', font=('Helvetica', 11))
+        label.pack()
+        return label
         
     def genScoreboard(self, master):
-        score_lbl = tk.Label(master, textvariable= self.score)
+        score_lbl = tk.Label(master, textvariable= self.score, bg = 'white', font=('Helvetica', 11))
         score_lbl.pack(side = 'top')
         return score_lbl
         
     def genPlayground(self, master):
-        greet_lbl = tk.Label(master, text='Try to guess the word!')
+        greet_lbl = tk.Label(master, text='Try to find the word!', bg = 'white', font=('Helvetica', 14))
         greet_lbl.pack()
-        def_lbl = tk.Label(master)
+        def_lbl = tk.Label(master, bg = 'white', font=('Helvetica', 11))
         def_lbl.pack()
         return def_lbl
 
@@ -568,11 +624,12 @@ class MatchWordViewController:
         self.game = MatchWord()
         self.view.submit.config(command=lambda:self.submit())
         self.initGame()
-        self.view.submit.bind("<Return>", lambda e:self.submit())
+
 
 
     
     def initGame(self):
+        self.view.dialog.config(text = 'Good luck!');
         self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.view.buttons[0].config(text=self.game.word1["word"], variable=self.view.buttonvar, value = 1)
         self.view.buttons[1].config(text=self.game.word2["word"],variable=self.view.buttonvar, value = 2)
@@ -581,24 +638,35 @@ class MatchWordViewController:
         new_text = my_wrap.fill(self.game.word['definition'])
         definition = tk.StringVar(value = "Here's its' definition:\n"+new_text)
         self.view.score.set("Current score: "+ str(self.game.score.get()))
-        self.view.definition.config(textvariable=definition, width=70)
+        self.view.definition.config(textvariable=definition, width=70, justify=tk.LEFT)
         
     def submit(self):
         ans = self.view.buttonvar.get()
         for button in self.view.buttons:
             if button['value']==ans:
                 if button['text'].lower() == self.game.word['word'].lower():
+                    self.view.dialog.config(text = 'Correct!', bg = 'green');
                     self.game.won = True
+                else :
+                    self.view.dialog.config(text = 'Wrong!', bg = 'red');
         self.view.buttonvar.set(0)
         self.game.updateScore()
         self.view.score.set("Current score: "+ str(self.game.score.get()))
+        self.view.submit.config(text ="Play again?", command = lambda:self.reset())
+        
+        
+    
+    def reset(self):
+        storeCompleteWord(self.game.word)
+        self.view.dialog.config(text = 'Good luck!', bg = 'white');
+        self.view.submit.config(text ="Submit", command = lambda:self.submit())
         self.view.buttons[0].config(text=self.game.word1["word"], variable=self.view.buttonvar, value = 1)
         self.view.buttons[1].config(text=self.game.word2["word"],variable=self.view.buttonvar, value = 2)
         self.view.buttons[2].config(text=self.game.word3["word"], variable=self.view.buttonvar, value = 3)
         my_wrap = textwrap.TextWrapper(width=70)
         new_text = my_wrap.fill(self.game.word['definition'])
         definition = tk.StringVar(value = "Here's its' definition:\n"+new_text)
-        self.view.definition.config(textvariable=definition, width=70)
+        self.view.definition.config(textvariable=definition, width=70, justify=tk.LEFT)
 
 # =============================================================================
 # To be executed...
