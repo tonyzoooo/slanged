@@ -13,7 +13,7 @@ slanged! is Python-based project made by students as an English class assignment
 
 ## Contents
 
-There are three different games in this project
+There are three different games in this project :
 
 - Hangman
 - Guess the word

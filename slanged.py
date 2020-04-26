@@ -12,7 +12,8 @@ import requests
 import re
 from random import randint
 import textwrap
-from tkinter import font as tkfont 
+import time
+import math
 
 
 # =============================================================================
@@ -173,8 +174,8 @@ class HangmanView(View):
         self.score = tk.StringVar()
         self.letters = tk.StringVar()
         self.lives = tk.StringVar()
-        image = tk.Frame(self.container, width = 500, height = 500)
-        self.image = self.genPicture(image)
+        turtle = turtle_du_pauvre(self.container, width=500, height=500, bg = "white")
+        self.turtle = turtle
         dialogbox = tk.Frame(self.container, bg = 'white')
         self.dialog = self.genDialog(dialogbox)
         playground = tk.Frame(self.container, bg = 'white')
@@ -185,8 +186,7 @@ class HangmanView(View):
         self.word = self.genPlayground(playground)
         self.entry = self.genEntry(playground)
         self.title.config(text=self.name)
-
-        image.grid(row= 1, column=0)
+        self.turtle.grid(row=1, column =0)
         playground.grid(row = 2, column = 0)
         scoreboard.grid(row = 2, column = 1)
         keyboard.grid(row = 1,  column = 1)
@@ -197,13 +197,6 @@ class HangmanView(View):
         label.pack()
         return label
 
-    def genPicture(self, master):
-        im = tk.PhotoImage(file = "states/0.png")
-        label = tk.Label(master)
-        label.im = im
-        label.configure(image = label.im, bg = 'white', borderwidth=1, relief=tk.GROOVE)
-        label.pack()
-        return label
         
     def genEntry(self, master):
         entry = tk.Entry(master)
@@ -268,14 +261,82 @@ class HangmanView(View):
         word_lbl.pack()
         return word_lbl
     
-
+class turtle_du_pauvre(tk.Canvas):
+  def __init__(self, master, **args):
+    super(turtle_du_pauvre,self).__init__(master, **args)
+    self.angle = 0
+    self.pos = (250,250)
+    self.unit = 1
+    self.speed = 100
+    
+  def reset(self):
+    self.delete("all")
+    self.pos = (250,250)  
+    self.angle=0
+  
+  def seth(self,angle):
+    self.angle = angle
+  
+  def goto(self, x, y):
+    self.pos = (x,y)
+  
+  def right(self, angle):
+    self.angle = self.angle + angle
+  
+  def left(self, angle):
+    self.angle = self.angle - angle
+  
+  def forward(self, d):
+    angle = self.angle*math.pi/180
+    (x,y) = self.pos
+    x_unit=self.unit*math.cos(angle)
+    y_unit=self.unit*math.sin(angle)
+    for k in range(round(d/self.unit)) :
+      self.create_line(x,y,round(x+k*x_unit),round(y+k*y_unit))
+      self.update()
+      time.sleep(0.01/self.speed)
+    (x1,y1) = self.pos
+    self.pos = (x+d*x_unit,y+d*y_unit)
+    
+  def backward(self,d):
+    angle = self.angle*math.pi/180 + math.pi
+    (x,y) = self.pos
+    x_unit=self.unit*math.cos(angle)
+    y_unit=self.unit*math.sin(angle)
+    for k in range(round(d/math.sqrt(2*(self.unit**2)))) :
+      self.create_line(x,y,round(x+k*x_unit),round(y+k*y_unit))
+      self.update()
+      time.sleep(0.01/self.speed)
+    (x1,y1) = self.pos
+    self.pos = (x+d*x_unit,y+d*y_unit)
+    
+  
+  def circle(self, r):
+    (x,y) = self.pos
+    angle = self.angle*math.pi/180
+    x_centre = x + r*math.cos(angle)
+    y_centre = y + r*math.sin(angle)
+    angle_unit = self.unit/r
+    new_angle = angle + math.pi
+    for k in range(round(2*math.pi*r/self.unit+1)):
+      new_x = x_centre + r*math.cos(new_angle)
+      new_y = y_centre + r*math.sin(new_angle)
+      self.create_line(x,y,new_x,new_y)
+      x,y= new_x,new_y
+      new_angle = new_angle + angle_unit
+      self.update()
+      time.sleep(0.01/self.speed)
+      
+  def move(self,x,y):
+    (bx,by) = self.pos
+    self.pos = (bx+x,by+y)
 
 class Hangman(Game):
     def __init__(self):    
         super().__init__(self)
         self.score.set(0)
         self.word = findRandomWord()['word']
-        self.lives.set(8)
+        self.lives.set(11)
         self.hword=list(len(self.word)*'_')
         self.letters = []
     
@@ -299,6 +360,7 @@ class HangmanViewController:
         self.bindButtons()
         self.initGame()
         self.view.entry.bind("<Return>", lambda e:self.allin())
+        
 
 
     def bindButtons(self):
@@ -321,15 +383,13 @@ class HangmanViewController:
         if self.view.entry.get().lower()==self.game.word.lower():
             self.game.won =True
             self.game.updateScore()
-            self.view.dialog.config(text="Damn, you're good!")
+            self.view.dialog.config(text="Damn, you're good!\nPress 'R' to play again!")
         else :
             self.game.lives.set(0)
             self.game.updateScore()
-            im = tk.PhotoImage(file = "states/8.png")
-            self.im = im
-            self.view.image.configure(image = self.im)
-            self.view.dialog.config(text="That was reckless dude!\nPress 'R' to play again"+
+            self.view.dialog.config(text="That was reckless dude!\nPress 'R' to play again!"+
                                     "\nThe word was actually: "+self.game.word)
+        self.unbindButtons()
         self.view.bind("r",lambda e:self.reset())
         self.view.focus_set()
         
@@ -340,15 +400,15 @@ class HangmanViewController:
         self.bindButtons()
         self.game.guess = False
         self.game.word = findRandomWord()['word']
-        self.game.lives.set(8)
+        self.game.lives.set(11)
         self.game.hword=list(len(self.game.word)*'_')
         hw = tk.StringVar(value = ' '.join(self.game.hword))
         self.view.word['textvariable'] = hw
         self.game.letters = []
         hw = tk.StringVar()
-        im = tk.PhotoImage(file = "states/0.png")
-        self.im = im
-        self.view.image.configure(image = self.im)
+        self.view.turtle.destroy()
+        self.view.turtle = turtle_du_pauvre(self.view.container, width=500, height=500, bg = "white")
+        self.view.turtle.grid(row=1 , column =0)
         self.view.dialog.config(text="Good luck again!")
         self.view.letters.set("Input letters:\n"+ ', '.join(self.game.letters))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
@@ -370,27 +430,105 @@ class HangmanViewController:
                     self.game.guess = True
                     self.game.hword[i] = letter
             self.game.won = not '_' in self.game.hword
+            if self.game.guess ==False:
+                self.draw()
             self.game.updateScore()
         for button in self.view.buttons:
             if button.text == letter:
                 button.configure(relief = tk.SUNKEN, bg='black')
         hw.set(' '.join(self.game.hword))
-        im = tk.PhotoImage(file = "states/"+str(8-self.game.lives.get())+".png")
-        self.im = im
-        self.view.image.configure(image = self.im)
         self.view.word['textvariable'] = hw
         self.view.letters.set("Input letters:\n"+ ', '.join(self.game.letters))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
-        if (7 > self.game.lives.get()> 4):
+        if (11 > self.game.lives.get()> 7):
             self.view.dialog.config(text="Come on!\nYou can do it!")
-        elif 4>=self.game.lives.get()>0 :
+        elif 7>=self.game.lives.get()>0 :
             self.view.dialog.config(text="Hmmmm...")
         elif self.game.lives.get()==0:
             self.view.dialog.config(text="Too bad, you lost!\nPress 'R' to play again!"+
                                     "\nThe word was actually: "+self.game.word)
             self.unbindButtons()
             self.view.bind("r", lambda e:self.reset())
+      
+    def draw(self):
+        turtle = self.view.turtle
+        
+        def case11(pos):
+            turtle.move(100,200)
+            turtle.forward(100)
             
+        def case10(pos):
+            turtle.move(-50,0)
+            turtle.left(90)
+            turtle.forward(400)
+        
+        def case9(pos):
+            turtle.left(90)
+            turtle.forward(200)
+            self.pos = turtle.pos
+            
+        def case8(pos):
+            turtle.move(150,0)
+            turtle.left(135)
+            turtle.forward(math.sqrt(2*(50**2)))
+            
+        def case7(pos9):
+            (x,y) = pos9
+            turtle.goto(x,y)
+            turtle.seth(90)
+            turtle.forward(100)
+        
+        def case6(pos):
+            turtle.circle(25)
+            
+        def case5(pos):
+            turtle.seth(90)
+            turtle.move(0,50)
+            turtle.forward(120)
+            
+        def case4(pos):
+            turtle.right(math.atan(40/80)*180/math.pi)
+            turtle.forward(math.sqrt((40**2)+(80**2)))
+            
+        def case3(pos):
+            turtle.move(80,0)
+            turtle.left(2*math.atan(40/80)*180/math.pi+180)
+            turtle.forward(math.sqrt((40**2)+(80**2)))
+            self.pos = turtle.pos
+            
+        def case2(pos):
+            turtle.move(0,-70)
+            turtle.left(10)
+            turtle.forward(math.sqrt((40**2)+(80**2)))
+                
+        def case1(pos3):
+            (x,y)=pos3
+            turtle.goto(x,y-70)
+            turtle.right(2*(math.atan(40/80)*180/math.pi+10))
+            turtle.forward(math.sqrt((40**2)+(80**2)))
+            
+        def case0():
+          pass
+        if(turtle.pos == (250,250)):
+          self.pos=(0,0)
+        
+        
+        switcher = {
+            0 : case0,
+            1 : case1,
+            2 : case2,
+            3 : case3,
+            4 : case4,
+            5 : case5,
+            6 : case6,
+            7 : case7,
+            8 : case8,
+            9 : case9,
+            10 : case10,
+            11 : case11}
+        
+        f = switcher.get(self.game.lives.get())
+        f(self.pos)
 
               
           
