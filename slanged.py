@@ -16,6 +16,7 @@ import time
 import math
 
 
+
 # =============================================================================
 # Useful functions
 # =============================================================================
@@ -56,7 +57,7 @@ def storeCompleteWord(word):
         for key, value in word.items():
             file.write('%s:%s\n' % (key, value))
         file.write("\n\n")
-
+        
 # =============================================================================
 # Main classes (MVC pattern)
 # =============================================================================
@@ -350,14 +351,18 @@ class Hangman(Game):
         if self.won and lives!=0:
             self.score.set(score +lives)
         elif not self.won and lives == 1 and score >=5 and not self.guess:
+            self.lives.set(lives-1)
             self.score.set(score-5)
-        elif not self.won and lives == 0 and score <5 and not self.guess:
+            self.reset()
+        elif not self.won and lives == 1 and score <5 and not self.guess:
+            self.lives.set(lives-1)
             self.score.set(0)
             self.reset()
         elif self.guess and lives != 0:
-            self.guess = False
+            self.reset()
         else:
             self.lives.set(lives-1)
+            self.reset()
 
 class HangmanViewController:
     def __init__(self):
@@ -393,9 +398,11 @@ class HangmanViewController:
             self.view.dialog.config(text="Damn, you're good!\nPress 'R' to play again!")
         else :
             self.game.lives.set(0)
+            self.game.won =False
             self.game.updateScore()
             self.view.dialog.config(text="That was reckless dude!\nPress 'R' to play again!"+
                                     "\nThe word was actually: "+self.game.word)
+        self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.unbindButtons()
         self.view.bind("r",lambda e:self.reset())
         self.view.focus_set()
@@ -405,6 +412,7 @@ class HangmanViewController:
         self.view.entry.delete(0, 'end')
         self.resetButtons()
         self.bindButtons()
+        self.game.won =False
         self.game.guess = False
         self.game.word = findRandomWord()['word']
         self.game.lives.set(11)
@@ -439,11 +447,16 @@ class HangmanViewController:
             self.game.won = not '_' in self.game.hword
             if self.game.guess ==False:
                 self.draw()
+            if self.game.won:
+                self.view.dialog.config(text="Good job!\nPress 'R' to play again!")
+                self.unbindButtons()
+            self.view.bind("r", lambda e:self.reset())
             self.game.updateScore()
         for button in self.view.buttons:
             if button.text == letter:
                 button.configure(relief = tk.SUNKEN, bg='black')
         hw.set(' '.join(self.game.hword))
+        self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.view.word['textvariable'] = hw
         self.view.letters.set("Input letters:\n"+ ', '.join(self.game.letters))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
@@ -622,10 +635,12 @@ class GuessWordViewController:
         if self.game.won and lives!=0:
             self.game.score.set(score +lives)
         elif not self.game.won and lives == 1 and score >=5 and not self.game.guess:
+            self.game.lives.set(lives-1)
             self.game.score.set(score-5)
-        elif not self.game.won and lives == 0 and score <5 and not self.game.guess:
-            self.score.set(0)
-            self.reset()
+        elif not self.game.won and lives == 1 and score <5 and not self.game.guess:
+            self.game.lives.set(lives-1)
+            self.game.score.set(0)
+            
         elif self.game.guess and lives != 0:
             self.game.guess = False
         else:
@@ -653,6 +668,7 @@ class GuessWordViewController:
             self.game.attempts.append(word)
             self.view.word.delete(0, 'end')
         self.updateScore()
+        self.view.score.set("Current score: "+ str(self.game.score.get()))
         self.view.attempts.set("Input words:\n"+ str(self.game.attempts))
         self.view.lives.set("Remaining attempts: "+ str(self.game.lives.get()))
         if self.game.lives.get()==0:
@@ -666,6 +682,7 @@ class GuessWordViewController:
         storeCompleteWord(self.game.word)
         self.view.word.delete(0, 'end')
         self.game.guess = False
+        self.game.won = False
         self.game.word = findRandomWord()
         self.game.lives.set(5)
         self.game.attempts = []
